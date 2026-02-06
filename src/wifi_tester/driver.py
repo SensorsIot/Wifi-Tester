@@ -52,7 +52,7 @@ class WiFiTesterDriver:
         self._lock = threading.Lock()
 
     def open(self) -> None:
-        self._serial = serial.Serial(self._port, self._baudrate, timeout=0.1)
+        self._serial = serial.serial_for_url(self._port, baudrate=self._baudrate, timeout=0.1)
         self._serial.reset_input_buffer()
         self._running = True
         self._reader_thread = threading.Thread(target=self._reader_loop, daemon=True)

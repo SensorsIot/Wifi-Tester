@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68.0", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wifi-tester"
+version = "1.0.0"
+description = "Python driver for the WiFi Tester instrument (ESP32-C3)"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = [
+    "pyserial",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+
+[project.scripts]
+wifi-tester = "wifi_tester.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

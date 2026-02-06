@@ -5,7 +5,7 @@ import uuid
 
 import pytest
 
-from wifi_tester_driver import WiFiTesterDriver
+from wifi_tester import WiFiTesterDriver
 
 
 @pytest.fixture(scope="session")

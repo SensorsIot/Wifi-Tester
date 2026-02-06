@@ -3,13 +3,9 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "driver/uart.h"
 #include "esp_log.h"
 
 static const char *TAG = "serial";
-
-#define UART_NUM       UART_NUM_0
-#define UART_BUF_SIZE  (SERIAL_MAX_LINE_LEN + 128)
 
 static const cmd_entry_t *s_commands = NULL;
 static char s_line_buf[SERIAL_MAX_LINE_LEN];
@@ -17,17 +13,9 @@ static char s_tx_buf[SERIAL_MAX_LINE_LEN];
 
 void serial_init(void)
 {
-    uart_config_t uart_config = {
-        .baud_rate  = SERIAL_BAUD_RATE,
-        .data_bits  = UART_DATA_8_BITS,
-        .parity     = UART_PARITY_DISABLE,
-        .stop_bits  = UART_STOP_BITS_1,
-        .flow_ctrl  = UART_HW_FLOWCTRL_DISABLE,
-        .source_clk = UART_SCLK_DEFAULT,
-    };
-
-    uart_driver_install(UART_NUM, UART_BUF_SIZE, UART_BUF_SIZE, 0, NULL, 0);
-    uart_param_config(UART_NUM, &uart_config);
+    /* With CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y the VFS layer
+       already maps stdin/stdout to the USB Serial/JTAG peripheral.
+       No UART driver setup is needed. */
 }
 
 void serial_register_commands(const cmd_entry_t *commands)
@@ -37,8 +25,9 @@ void serial_register_commands(const cmd_entry_t *commands)
 
 static void serial_send_line(const char *line)
 {
-    uart_write_bytes(UART_NUM, line, strlen(line));
-    uart_write_bytes(UART_NUM, "\n", 1);
+    fputs(line, stdout);
+    fputc('\n', stdout);
+    fflush(stdout);
 }
 
 void serial_send_response_ok(const char *cmd, cJSON *payload)
@@ -75,14 +64,13 @@ static int serial_read_line(char *buf, int max_len)
 {
     int pos = 0;
     while (pos < max_len - 1) {
-        uint8_t ch;
-        int len = uart_read_bytes(UART_NUM, &ch, 1, pdMS_TO_TICKS(100));
-        if (len <= 0) {
+        int ch = fgetc(stdin);
+        if (ch == EOF) {
             continue;
         }
         if (ch == '\n') {
             buf[pos] = '\0';
-            // Strip trailing \r
+            /* Strip trailing \r */
             if (pos > 0 && buf[pos - 1] == '\r') {
                 buf[pos - 1] = '\0';
                 pos--;

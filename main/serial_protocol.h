@@ -4,7 +4,6 @@
 #include "cJSON.h"
 
 #define SERIAL_MAX_LINE_LEN 4096
-#define SERIAL_BAUD_RATE    115200
 
 typedef void (*cmd_handler_t)(const char *cmd_name, cJSON *args);
 
@@ -14,7 +13,7 @@ typedef struct {
 } cmd_entry_t;
 
 /**
- * Initialize UART for serial protocol.
+ * Initialize serial I/O (no-op when using USB Serial/JTAG via VFS).
  */
 void serial_init(void);
 

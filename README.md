@@ -66,13 +66,19 @@ idf.py flash -p /dev/ttyACM0
 ### Install the Python driver
 
 ```bash
-pip install pyserial
+pip install git+https://github.com/SensorsIot/Wifi-Tester.git
+```
+
+Or add to your project's `requirements.txt`:
+
+```
+wifi-tester @ git+https://github.com/SensorsIot/Wifi-Tester.git
 ```
 
 ### Run your first test
 
 ```python
-from wifi_tester_driver import WiFiTesterDriver
+from wifi_tester import WiFiTesterDriver
 
 tester = WiFiTesterDriver("/dev/ttyACM0")
 tester.open()
@@ -99,6 +105,22 @@ print(f"Device reconnected at {station['ip']}")
 tester.ap_stop()
 tester.close()
 ```
+
+## CLI
+
+The package includes a `wifi-tester` command for interactive use:
+
+```bash
+# Interactive REPL
+wifi-tester --port /dev/ttyACM0
+
+# Single command
+wifi-tester --port /dev/ttyACM0 --command ping
+wifi-tester -c "ap_start MY-NET secret123"
+wifi-tester -c scan
+```
+
+Commands: `ping`, `ap_start`, `ap_stop`, `ap_status`, `sta_join`, `sta_leave`, `scan`, `http`, `reset`.
 
 ## Usage Examples
 
@@ -186,18 +208,22 @@ Full protocol specification: **[docs/WiFi-Tester-FSD.md](docs/WiFi-Tester-FSD.md
 
 ```
 wifi-tester/
-├── main/                       # ESP-IDF firmware (C)
-│   ├── main.c                  # Entry point and main loop
-│   ├── serial_protocol.c/h     # UART command parsing and response formatting
-│   ├── wifi_controller.c/h     # softAP and STA management, event callbacks
-│   ├── http_relay.c/h          # esp_http_client relay with base64 encoding
-│   └── version.h               # Firmware version
-├── pytest/                     # Python test driver and self-tests
-│   ├── wifi_tester_driver.py   # WiFiTesterDriver serial class
-│   ├── conftest.py             # Generic fixtures (wifi_tester, wifi_network)
-│   └── test_instrument.py      # Self-tests for the instrument (WT-xxx)
+├── pyproject.toml                 # Python package configuration
+├── src/wifi_tester/               # pip-installable Python driver
+│   ├── __init__.py                # Exports WiFiTesterDriver, WiFiTesterError, Response
+│   ├── driver.py                  # Serial driver class
+│   └── cli.py                     # Interactive CLI (wifi-tester command)
+├── tests/                         # Instrument self-tests (pytest)
+│   ├── conftest.py                # Generic fixtures (wifi_tester, wifi_network)
+│   └── test_instrument.py         # WT-xxx self-tests
+├── main/                          # ESP-IDF firmware (C)
+│   ├── main.c                     # Entry point and command handlers
+│   ├── serial_protocol.c/h        # USB Serial/JTAG I/O, CMD dispatch, RSP formatting
+│   ├── wifi_controller.c/h        # softAP and STA management, event callbacks
+│   ├── http_relay.c/h             # esp_http_client relay with base64 encoding
+│   └── version.h                  # Firmware version
 └── docs/
-    └── WiFi-Tester-FSD.md      # Functional specification document
+    └── WiFi-Tester-FSD.md         # Functional specification document
 ```
 
 DUT-specific test scripts belong in the DUT's own repository, not here.

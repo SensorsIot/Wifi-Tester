@@ -1,6 +1,6 @@
 # WiFi Tester - Functional Specification Document
 
-**Version:** 1.2
+**Version:** 1.3
 **Date:** February 2026
 **Platform:** ESP32-C3 (ESP-IDF)
 **Repository:** https://github.com/SensorsIot/Wifi-Tester
@@ -98,7 +98,7 @@ The firmware is a single-purpose ESP-IDF application with three components:
 │           Main Task                │
 │  ┌──────────────────────────────┐  │
 │  │   Serial Command Parser      │  │
-│  │   - Read line from UART      │  │
+│  │   - Read line from stdin      │  │
 │  │   - Parse CMD + JSON args    │  │
 │  │   - Dispatch to handler      │  │
 │  │   - Send RSP line            │  │
@@ -131,7 +131,7 @@ All built into ESP-IDF — no external libraries:
 | HTTP client | `esp_http_client` |
 | JSON parsing | `cJSON` (bundled) |
 | Base64 encoding | `mbedtls/base64.h` (bundled) |
-| UART serial | `driver/uart.h` |
+| USB Serial/JTAG I/O | `stdin`/`stdout` via VFS (CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG) |
 
 ---
 
@@ -307,7 +307,15 @@ Optional diagnostic output for debugging the WiFi Tester itself. Levels: `error`
 
 The `WiFiTesterDriver` class wraps serial communication and provides high-level Python methods. It is **DUT-agnostic** — it knows nothing about what device is being tested.
 
+Install from GitHub:
+
+```bash
+pip install git+https://github.com/SensorsIot/Wifi-Tester.git
+```
+
 ```python
+from wifi_tester import WiFiTesterDriver
+
 class WiFiTesterDriver:
     """Serial driver for the WiFi Tester instrument."""
 
@@ -363,6 +371,8 @@ This allows asynchronous events (station connect/disconnect) to arrive between c
 These fixtures provide reusable WiFi test building blocks. They are DUT-agnostic.
 
 ```python
+from wifi_tester import WiFiTesterDriver
+
 @pytest.fixture(scope="session")
 def wifi_tester():
     """Session-scoped connection to the WiFi Tester instrument."""
@@ -537,24 +547,28 @@ The same WiFi Tester hardware + firmware works for any device — only the test 
 
 ```
 wifi-tester/
+├── pyproject.toml                 # Python package configuration (pip-installable)
 ├── CMakeLists.txt
 ├── sdkconfig.defaults
+├── src/wifi_tester/               # pip-installable Python driver
+│   ├── __init__.py                # Exports WiFiTesterDriver, WiFiTesterError, Response
+│   ├── driver.py                  # Serial driver class
+│   └── cli.py                     # Interactive CLI (wifi-tester command)
+├── tests/                         # Instrument self-tests (pytest)
+│   ├── conftest.py                # Generic fixtures: wifi_tester, wifi_network
+│   └── test_instrument.py         # WT-xxx self-tests for the instrument itself
 ├── main/
 │   ├── CMakeLists.txt
-│   ├── main.c                  # App entry, main loop
-│   ├── serial_protocol.c/h     # UART line parsing, CMD dispatch, RSP formatting
-│   ├── wifi_controller.c/h     # softAP/STA management, event callbacks
-│   ├── http_relay.c/h          # esp_http_client relay, base64 encode/decode
-│   └── version.h               # FW_VERSION define
-├── pytest/
-│   ├── wifi_tester_driver.py   # WiFiTesterDriver serial class
-│   ├── conftest.py             # Generic fixtures: wifi_tester, wifi_network
-│   └── test_instrument.py      # WT-xxx self-tests for the instrument itself
+│   ├── main.c                     # App entry, main loop
+│   ├── serial_protocol.c/h        # USB Serial/JTAG I/O, CMD dispatch, RSP formatting
+│   ├── wifi_controller.c/h        # softAP/STA management, event callbacks
+│   ├── http_relay.c/h             # esp_http_client relay, base64 encode/decode
+│   └── version.h                  # FW_VERSION define
 └── docs/
-    └── WiFi-Tester-FSD.md      # This document
+    └── WiFi-Tester-FSD.md         # This document
 ```
 
-DUT-specific test scripts live in the **DUT's repository**, not here. For example, the Modbus Proxy WiFi tests would live in `Modbus_Proxy/test/wifi/` and import `wifi_tester_driver` as a dependency.
+DUT-specific test scripts live in the **DUT's repository**, not here. For example, the Modbus Proxy WiFi tests would live in `Modbus_Proxy/test/wifi/` and add `wifi-tester @ git+https://github.com/SensorsIot/Wifi-Tester.git` to their requirements.
 
 ---
 
@@ -577,3 +591,4 @@ That's it. No DUT configuration here — that belongs in the DUT's test suite.
 | 1.0 | 2026-02-06 | Initial specification (DUT-coupled design) |
 | 1.1 | 2026-02-06 | Redesigned as generic "dumb instrument"; all DUT logic moved to pytest |
 | 1.2 | 2026-02-06 | Updated API examples to match implementation (`json_data`, `scan()` return type) |
+| 1.3 | 2026-02-06 | Packaged as pip-installable (`wifi-tester`); added CLI; firmware switched from UART to USB Serial/JTAG via VFS |

@@ -8,7 +8,7 @@ import time
 
 import pytest
 
-from wifi_tester_driver import WiFiTesterError
+from wifi_tester import WiFiTesterError
 
 
 # ============================================================
