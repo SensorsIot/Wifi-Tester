@@ -214,7 +214,7 @@ DUT-specific test scripts belong in the DUT's own repository, not here.
 
 ## Status
 
-Under development. Firmware is implemented and builds on ESP-IDF v5.4. Python test driver is next.
+Under development. Firmware is implemented and flashed. Python test driver and instrument self-tests are implemented.
 
 ## License
 
