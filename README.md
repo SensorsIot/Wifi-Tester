@@ -214,7 +214,7 @@ DUT-specific test scripts belong in the DUT's own repository, not here.
 
 ## Status
 
-Under development. The FSD is complete; firmware implementation is next.
+Under development. Firmware is implemented and builds on ESP-IDF v5.4. Python test driver is next.
 
 ## License
 
