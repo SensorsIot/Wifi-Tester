@@ -123,12 +123,12 @@ def test_captive_portal(wifi_tester):
 
     # Verify the portal AP appeared
     networks = wifi_tester.scan()
-    assert any(n["ssid"] == "MyDevice-Setup" for n in networks["networks"])
+    assert any(n["ssid"] == "MyDevice-Setup" for n in networks)
 
     # Join the portal, submit credentials
     wifi_tester.sta_join("MyDevice-Setup")
     resp = wifi_tester.http_post("http://192.168.4.1/setup",
-                                 json={"ssid": "TEST-NET", "pass": "secret"})
+                                 json_data={"ssid": "TEST-NET", "pass": "secret"})
     assert resp.status_code == 200
 
     # Leave portal, start our AP, wait for device

@@ -1,6 +1,6 @@
 # WiFi Tester - Functional Specification Document
 
-**Version:** 1.1
+**Version:** 1.2
 **Date:** February 2026
 **Platform:** ESP32-C3 (ESP-IDF)
 **Repository:** https://github.com/SensorsIot/Wifi-Tester
@@ -328,7 +328,7 @@ class WiFiTesterDriver:
     def http_request(self, method: str, url: str, headers: dict = None,
                      body: bytes = None, timeout: int = 10) -> Response
     def http_get(self, url: str, **kwargs) -> Response
-    def http_post(self, url: str, json: dict = None, **kwargs) -> Response
+    def http_post(self, url: str, json_data: dict = None, **kwargs) -> Response
 
     # WiFi scanning
     def scan(self) -> list[dict]
@@ -488,8 +488,8 @@ def test_captive_portal_provisioning(wifi_tester):
     time.sleep(100)
 
     # 3. Verify DUT's portal AP appeared
-    result = wifi_tester.scan()
-    assert any(n["ssid"] == portal_ssid for n in result["networks"])
+    networks = wifi_tester.scan()
+    assert any(n["ssid"] == portal_ssid for n in networks)
 
     # 4. Join the DUT's portal AP
     wifi_tester.sta_join(portal_ssid)
@@ -501,7 +501,7 @@ def test_captive_portal_provisioning(wifi_tester):
 
     # 6. Submit credentials through the portal
     wifi_tester.http_post("http://192.168.4.1/api/wifi",
-                          json={"ssid": target_ssid, "password": target_pass})
+                          json_data={"ssid": target_ssid, "password": target_pass})
 
     # 7. Leave portal, start our AP
     wifi_tester.sta_leave()
@@ -576,3 +576,4 @@ That's it. No DUT configuration here — that belongs in the DUT's test suite.
 |---------|------|---------|
 | 1.0 | 2026-02-06 | Initial specification (DUT-coupled design) |
 | 1.1 | 2026-02-06 | Redesigned as generic "dumb instrument"; all DUT logic moved to pytest |
+| 1.2 | 2026-02-06 | Updated API examples to match implementation (`json_data`, `scan()` return type) |
